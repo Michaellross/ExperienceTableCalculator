@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Harpagia XP Calculator</title>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --line: rgba(148,163,184,.2);
+      --accent: #60a5fa;
+      --radius: 16px;
+      --shadow: 0 12px 35px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
+        radial-gradient(1100px 700px at 100% 10%, rgba(52,211,153,.12), transparent 55%),
+        var(--bg);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+    header {
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+      margin-bottom: 18px;
+    }
+    h1 { font-size: 28px; margin: 0; letter-spacing: .2px; }
+    .sub { margin: 6px 0 0; color: var(--muted); line-height: 1.4; max-width: 70ch; }
+    .pill {
+      border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; color: var(--muted);
+      font-size: 13px; display:flex; gap:10px; align-items:center;
+      background: rgba(17,24,39,.55);
+    }
+    .grid { display:grid; gap: 14px; grid-template-columns: 1.2fr .8fr; }
+    @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: rgba(17,24,39,.85);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h2 {
+      margin: 0; padding: 14px 16px; font-size: 16px; border-bottom: 1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .card h2 span { color: var(--muted); font-weight: 500; font-size: 12px; }
+    .card .body { padding: 14px 16px 16px; }
+    .row { display:grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 540px) { .row { grid-template-columns: 1fr; } }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 11px 12px; border-radius: 12px;
+      border: 1px solid var(--line); background: rgba(2,6,23,.35);
+      color: var(--text); outline: none;
+    }
+    input:focus { border-color: rgba(96,165,250,.6); box-shadow: 0 0 0 3px rgba(96,165,250,.18); }
+    .hint { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .kpis { display:grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+    .kpi {
+      border: 1px solid var(--line); border-radius: 14px; padding: 12px;
+      background: rgba(2,6,23,.25);
+    }
+    .kpi .name { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .kpi .val { font-size: 18px; font-weight: 700; letter-spacing:.2px; }
+    .kpi .subval { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .bar {
+      height: 10px; border-radius: 999px; background: rgba(148,163,184,.15);
+      overflow:hidden; border: 1px solid var(--line); margin-top: 10px;
+    }
+    .bar > div { height: 100%; width: 0%; background: rgba(96,165,250,.8); transition: width .2s ease; }
+    .btnrow { display:flex; gap: 10px; flex-wrap:wrap; margin-top: 12px; }
+    button {
+      border: 1px solid var(--line); background: rgba(2,6,23,.25);
+      color: var(--text); padding: 10px 12px; border-radius: 12px; cursor:pointer;
+    }
+    button:hover { border-color: rgba(96,165,250,.55); }
+    .tablewrap { max-height: 520px; overflow:auto; border-top: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      position: sticky; top: 0; background: rgba(17,24,39,.95);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px; text-align:left; font-size: 12px; color: var(--muted);
+      backdrop-filter: blur(6px);
+    }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid rgba(148,163,184,.12); font-size: 13px; }
+    tbody tr:hover { background: rgba(96,165,250,.08); }
+    .right { text-align:right; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .toast {
+      margin-top: 10px; padding: 10px 12px; border-radius: 12px;
+      border: 1px dashed rgba(148,163,184,.35); color: var(--muted); font-size: 12px;
+      background: rgba(2,6,23,.20);
+    }
+    .badge {
+      display:inline-block; font-size: 12px; padding: 4px 8px; border-radius: 999px;
+      border: 1px solid var(--line); color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Harpagia XP Calculator</h1>
+        <p class="sub">
+          Enter <b>Current</b> and <b>Goal</b> as either Level or total XP (XP wins if both are filled),
+          then add <b>XP/hour</b> to get time-to-goal.
+        </p>
+      </div>
+      <div class="pill" title="All calculations happen locally in your browser">
+        <span class="badge">Offline</span>
+        <span>Levels: 1–200</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>
+          Calculator
+          <span>XP takes priority over Level</span>
+        </h2>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label for="curLevel">Current Level</label>
+              <input id="curLevel" inputmode="numeric" placeholder="e.g. 42" />
+            </div>
+            <div>
+              <label for="curXP">Current XP (total)</label>
+              <input id="curXP" inputmode="numeric" placeholder="e.g. 105000" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label for="goalLevel">Goal Level</label>
+              <input id="goalLevel" inputmode="numeric" placeholder="e.g. 60" />
+            </div>
+            <div>
+              <label for="goalXP">Goal XP (total)</label>
+              <input id="goalXP" inputmode="numeric" placeholder="e.g. 250000" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label for="xphr">XP / hour</label>
+              <input id="xphr" inputmode="decimal" placeholder="e.g. 8500" />
+              <div class="hint">Tip: if you’re not sure, put a guess here and tweak it until it feels right.</div>
+            </div>
+            <div>
+              <label for="searchLevel">Quick jump (Level)</label>
+              <input id="searchLevel" inputmode="numeric" placeholder="Highlights the level in the table" />
+              <div class="hint">Scroll-free way to spot the XP target for a specific level.</div>
+            </div>
+          </div>
+
+          <div class="btnrow">
+            <button id="clearBtn" type="button">Clear</button>
+            <button id="exampleBtn" type="button">Load example</button>
+          </div>
+
+          <div class="toast" id="status"></div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2>
+          Results
+          <span id="asof"></span>
+        </h2>
+        <div class="body">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="name">Current (resolved)</div>
+              <div class="val" id="curResolved">—</div>
+              <div class="subval" id="curResolved2"></div>
+            </div>
+            <div class="kpi">
+              <div class="name">Goal (resolved)</div>
+              <div class="val" id="goalResolved">—</div>
+              <div class="subval" id="goalResolved2"></div>
+            </div>
+            <div class="kpi">
+              <div class="name">XP remaining</div>
+              <div class="val" id="xpRemain">—</div>
+              <div class="subval" id="xpRemain2"></div>
+            </div>
+            <div class="kpi">
+              <div class="name">Time to goal</div>
+              <div class="val" id="timeRemain">—</div>
+              <div class="subval" id="timeRemain2"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="small muted">Progress (current → goal)</div>
+            <div class="bar" aria-label="progress bar"><div id="progBar"></div></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card" style="margin-top:14px;">
+      <h2>
+        XP Table
+        <span class="muted">Cumulative XP required to reach each level</span>
+      </h2>
+      <div class="tablewrap">
+        <table id="xpTable">
+          <thead>
+            <tr>
+              <th style="width:90px;">Level</th>
+              <th class="right">Cumulative XP to Reach</th>
+              <th class="right">XP Gained This Level</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+<script>
+  // --- Data (from your spreadsheet) ---
+  const cumulativeXP = [null, 0, 100, 210, 331, 464, 610, 771, 948, 1142, 1356, 1591, 1850, 2135, 2448, 2793, 3172, 3589, 4048, 4553, 5108, 5719, 6391, 7131, 7945, 8840, 9824, 10907, 12098, 13408, 14850, 16436, 18180, 20099, 22210, 24532, 27086, 29896, 32987, 36387, 40127, 44241, 48766, 53744, 59220, 65244, 71870, 79159, 87176, 95995, 105696, 116367, 128106, 141018, 155222, 170846, 188033, 206938, 227734, 250610, 275773, 303453, 333901, 367393, 404235, 444761, 489340, 538377, 592317, 651651, 716919, 788714, 867688, 954560, 1050119, 1155234, 1270860, 1398049, 1537957, 1691856, 1861145, 2047363, 2252203, 2477527, 2725383, 2998025, 3297931, 3627827, 3990713, 4389888, 4828980, 5311982, 5843284, 6427716, 7070591, 7777754, 8555633, 9411300, 10352534, 11387891, 12526784, 13779566, 15157627, 16673494, 18340948, 20175147, 22192766, 24412147, 26853466, 29538917, 32492913, 35742309, 39316644, 43248413, 47573359, 52330800, 57563985, 63320488, 69652642, 76618011, 84279917, 92708014, 101978920, 112176917, 123394714, 135734291, 149307825, 164238713, 180662690, 198729064, 218602076, 240462389, 264508733, 290959712, 320055789, 352061473, 387267726, 425994604, 468594170, 515453693, 566999168, 623699191, 686069216, 754676244, 830143974, 913158478, 1004474432, 1104921981, 1215414285, 1336955820, 1470651508, 1617716765, 1779488548, 1957437509, 2153181367, 2368499610, 2605349678, 2865884753, 3152473335, 3467720775, 3814492960, 4195942363, 4615536706, 5077090484, 5584799640, 6143279711, 6757607789, 7433368675, 8176705650, 8994376323, 9893814063, 10883195577, 11971515242, 13168666874, 14485533669, 15934087144, 17527495966, 19280245671, 21208270346, 23329097489, 25662007346, 28228208189, 31051029116, 34156132136, 37571745458, 41328920112, 45461812231, 50007993562, 55008793026, 60509672437, 66560639789, 73216703876, 80538374372, 88592211918, 97451433218, 107196576649, 117916234423, 129707857974, 142678643880, 156946508377, 172641159324]; // index = level (1..200)
+
+  function fmt(n) {
+    if (n === null || n === undefined || Number.isNaN(n)) return "—";
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function clampInt(v, min, max) {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Math.floor(Number(v));
+    if (!Number.isFinite(n)) return null;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function parseNum(v) {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(String(v).replace(/,/g,"").trim());
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function levelFromXP(xp) {
+    if (xp === null) return null;
+    // highest level with cumulativeXP[level] <= xp
+    let lo = 1, hi = 200, ans = 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (cumulativeXP[mid] <= xp) { ans = mid; lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    return ans;
+  }
+
+  function xpForLevel(level) {
+    if (level === null) return null;
+    return cumulativeXP[level];
+  }
+
+  function resolveXP(levelInput, xpInput) {
+    const xp = parseNum(xpInput);
+    if (xp !== null) return xp;
+    const lvl = clampInt(levelInput, 1, 200);
+    if (lvl !== null) return xpForLevel(lvl);
+    return null;
+  }
+
+  function resolveLevel(levelInput, xpInput) {
+    const xp = parseNum(xpInput);
+    if (xp !== null) return levelFromXP(xp);
+    const lvl = clampInt(levelInput, 1, 200);
+    return lvl;
+  }
+
+  function humanHours(hours) {
+    if (hours === null || !Number.isFinite(hours)) return "—";
+    if (hours <= 0) return "0h";
+    const d = Math.floor(hours / 24);
+    const remH = hours - d * 24;
+    if (d === 0) return `${fmt(remH)}h`;
+    return `${d}d ${fmt(remH)}h`;
+  }
+
+  function update() {
+    const curLevel = document.getElementById("curLevel").value;
+    const curXP    = document.getElementById("curXP").value;
+    const goalLevel= document.getElementById("goalLevel").value;
+    const goalXP   = document.getElementById("goalXP").value;
+    const xphr     = parseNum(document.getElementById("xphr").value);
+
+    const curResolvedXP = resolveXP(curLevel, curXP);
+    const goalResolvedXP = resolveXP(goalLevel, goalXP);
+    const curResolvedLvl = resolveLevel(curLevel, curXP);
+    const goalResolvedLvl = resolveLevel(goalLevel, goalXP);
+
+    const status = document.getElementById("status");
+    if (curResolvedXP === null || goalResolvedXP === null) {
+      status.textContent = "Enter a Current and a Goal (Level or XP).";
+    } else {
+      status.textContent = "Tip: you can type total XP directly, or just choose levels.";
+    }
+
+    const remain = (curResolvedXP === null || goalResolvedXP === null) ? null : Math.max(0, goalResolvedXP - curResolvedXP);
+    const hours = (remain === null || xphr === null || xphr <= 0) ? null : (remain / xphr);
+
+    // KPIs
+    document.getElementById("curResolved").textContent = curResolvedXP === null ? "—" : `${fmt(curResolvedXP)} XP`;
+    document.getElementById("curResolved2").textContent = curResolvedLvl === null ? "" : `≈ Level ${fmt(curResolvedLvl)}`;
+
+    document.getElementById("goalResolved").textContent = goalResolvedXP === null ? "—" : `${fmt(goalResolvedXP)} XP`;
+    document.getElementById("goalResolved2").textContent = goalResolvedLvl === null ? "" : `≈ Level ${fmt(goalResolvedLvl)}`;
+
+    document.getElementById("xpRemain").textContent = remain === null ? "—" : `${fmt(remain)} XP`;
+    document.getElementById("xpRemain2").textContent =
+      (curResolvedXP !== null && goalResolvedXP !== null && goalResolvedXP <= curResolvedXP) ? "Already there 🎉" : "";
+
+    document.getElementById("timeRemain").textContent = hours === null ? "—" : humanHours(hours);
+    document.getElementById("timeRemain2").textContent = hours === null
+      ? (remain === null ? "" : "Add XP/hour to estimate time")
+      : `${fmt(xphr)} XP/hr`;
+
+    // Progress bar (within current→goal window)
+    const bar = document.getElementById("progBar");
+    if (curResolvedXP === null || goalResolvedXP === null || goalResolvedXP <= curResolvedXP) {
+      bar.style.width = "0%";
+    } else {
+      bar.style.width = "0%"; // current is the start of the window
+    }
+
+    // Jump to table row if Quick jump used
+    const jumpLvl = clampInt(document.getElementById("searchLevel").value, 1, 200);
+    if (jumpLvl !== null) {
+      const tr = document.querySelector(`tbody tr[data-level='${jumpLvl}']`);
+      if (tr) {
+        tr.scrollIntoView({ behavior: "smooth", block: "center" });
+        tr.style.outline = "2px solid rgba(96,165,250,.65)";
+        tr.style.outlineOffset = "-2px";
+        setTimeout(()=>{ tr.style.outline = "none"; }, 900);
+      }
+    }
+  }
+
+  function buildTable() {
+    const tbody = document.querySelector("#xpTable tbody");
+    tbody.innerHTML = "";
+    for (let lvl = 1; lvl <= 200; lvl++) {
+      const cum = cumulativeXP[lvl];
+      const prev = (lvl === 1) ? 0 : cumulativeXP[lvl-1];
+      const gained = (lvl === 1) ? null : (cum - prev);
+      const tr = document.createElement("tr");
+      tr.dataset.level = String(lvl);
+      tr.innerHTML = `
+        <td><b>${lvl}</b></td>
+        <td class="right">${fmt(cum)}</td>
+        <td class="right">${gained === null ? "—" : fmt(gained)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function wire() {
+    const ids = ["curLevel","curXP","goalLevel","goalXP","xphr","searchLevel"];
+    ids.forEach(id => document.getElementById(id).addEventListener("input", update));
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      ids.forEach(id => document.getElementById(id).value = "");
+      update();
+    });
+
+    document.getElementById("exampleBtn").addEventListener("click", () => {
+      document.getElementById("curLevel").value = "42";
+      document.getElementById("goalLevel").value = "60";
+      document.getElementById("xphr").value = "8500";
+      document.getElementById("curXP").value = "";
+      document.getElementById("goalXP").value = "";
+      document.getElementById("searchLevel").value = "";
+      update();
+    });
+
+    document.getElementById("asof").textContent = new Date().toLocaleString();
+  }
+
+  buildTable();
+  wire();
+  update();
+</script>
+</body>
+</html>
